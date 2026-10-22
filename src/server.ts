@@ -54,10 +54,13 @@ app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
 });
 
 io.use(socketAuthMiddleware);
-io.on('connection', async socket => {
-  const userId = socket.data.userId as string;
+io.on('connection', async (socket) => {
+  const userId = socket.data.userId;
+   socket.on('send-message', msg => {
+     io.emit('new-message', msg);
+   });
   try {
-    registerChatHandlers(io, socket as never);
+    registerChatHandlers(io, socket);
     const user = await User.findByIdAndUpdate(
       userId,
       { isOnline: true, lastSeen: new Date() },

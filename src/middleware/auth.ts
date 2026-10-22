@@ -6,7 +6,7 @@ import { IUser, JwtProps, RefreshToken, TokenType } from "../models/User";
 declare global {
   namespace Express {
     interface Request {
-      user?: { id: string; jti: string };
+      user?: { userId: string; jti: string };
     }
   }
 } 
@@ -35,7 +35,7 @@ const getSecret = (): string => {
 };
 
 export async function generateTokens(user: IUser) {
-  const sub = String(user.id ?? user._id);
+  const sub = String(user.userId ?? user._id);
   const access = signToken({ sub, type: 'access'}, ACCESS_TTL_SEC);
   const refresh = signToken({ sub, type: 'refresh'}, REFRESH_TTL_SEC);
   await RefreshToken.create({
@@ -129,7 +129,7 @@ export async function authenticate(
     }
 
     req.user = {
-      id: decoded.sub || (decoded as any).id,
+      userId: decoded.sub || (decoded as any).id,
       jti: decoded.jti,
     };
 

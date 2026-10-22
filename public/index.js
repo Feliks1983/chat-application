@@ -44,7 +44,6 @@ function getRoomId() {
   return roomIdInput.value.trim();
 }
 
-
 async function createRoom() {
   const token = tokenInput.value.trim();
 
@@ -82,7 +81,6 @@ async function createRoom() {
     alert(error.message);
   }
 }
-
 
 function requireSocket() {
   if (!socket) {
@@ -129,7 +127,7 @@ function connectSocket() {
     logEvent('connect_error', { message: error.message });
   });
 
-  socket.on('new-message', message => {
+  socket.on('new-message', (message) => {
     appendMessage(message);
     logEvent('new-message', message);
     if (message._id) {
@@ -256,9 +254,7 @@ document.getElementById('sendButton').addEventListener('click', sendMessage);
 document.getElementById('typingStartButton').addEventListener('click', () => emitTyping(true));
 document.getElementById('typingStopButton').addEventListener('click', () => emitTyping(false));
 document.getElementById('readButton').addEventListener('click', markRead);
-document
-    .getElementById('createRoomButton')
-    .addEventListener('click', createRoom);
+document.getElementById('createRoomButton').addEventListener('click', createRoom);
 messageInput.addEventListener('input', () => {
   if (socket && getRoomId()) {
     emitTyping(true);

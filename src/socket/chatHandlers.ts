@@ -46,7 +46,7 @@ export function registerChatHandlers(io: Server, socket: ChatSocket): void {
       room.lastActivity = new Date();
       if (room.isPublic && !member) room.members.push(new mongoose.Types.ObjectId(userId));
       await room.save();
-      io.to(roomId).emit('new-message', message);
+
     } catch(error) {
       console.error('send-message failed:', error);
       socket.emit('error', { message: 'Could not send message' });

@@ -10,7 +10,7 @@ export interface Profile {
 }
 
 export interface IUser extends Document {
-  id: ObjectId;
+  userId: ObjectId;
   email: string;
   passwordHash: string;
   username: string;
@@ -22,6 +22,9 @@ export interface IUser extends Document {
   updatedAt?: Date;
   loginAttempts: number;
   lockUntil?: Date | null;
+  isOnline: boolean;
+  lastSeen: Date | null;
+  comparePassword(candidate: string): Promise<boolean>;
 }
 
 export interface JwtProps {
@@ -88,6 +91,8 @@ const userSchema = new mongoose.Schema<IUser>(
     updatedAt: { type: Date },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Date },
+    isOnline: { type: Boolean, default: false },
+    lastSeen: { type: Date, default: null },
   },
   {
     timestamps: true,
@@ -108,7 +113,19 @@ const userSchema = new mongoose.Schema<IUser>(
   }
 );
 
-export const User = mongoose.model<IUser>('User', userSchema);
+userSchema.pre('save', async function () {
+  if (this.isModified('password')) this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+});
+
+userSchema.methods.comparePassword = async function (candidate: string): Promise<boolean> {
+  return bcrypt.compare(candidate, this.password);
+};
+
+type UserModel = Model<IUser>;
+
+export type UserDocument = Document<IUser>;
+export default (mongoose.models.User as UserModel) ||
+  mongoose.model<IUser, UserModel>('User', userSchema);
 
 const refreshSchema = new Schema({
   jti: { type: String, required: true, unique: true },
@@ -118,36 +135,4 @@ const refreshSchema = new Schema({
 });
 export const RefreshToken = model('RefreshToken', refreshSchema);
 
-export interface IUser1 {
-  username: string;
-  email: string;
-  password: string;
-  isOnline: boolean;
-  lastSeen: Date | null;
-  comparePassword(candidate: string): Promise<boolean>;
-}
 
-type UserModel = Model<IUser1>;
-
-const userSchema1 = new Schema<IUser1, UserModel>(
-  {
-    username: { type: String, required: true, trim: true, minlength: 2, maxlength: 40 },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 8, select: false },
-    isOnline: { type: Boolean, default: false },
-    lastSeen: { type: Date, default: null },
-  },
-  { timestamps: true }
-);
-
-userSchema1.pre('save', async function () {
-  if (this.isModified('password')) this.password = await bcrypt.hash(this.password, 12);
-});
-
-userSchema1.methods.comparePassword = async function (candidate: string): Promise<boolean> {
-  return bcrypt.compare(candidate, this.password);
-};
-
-export type UserDocument = Document<IUser1>;
-export default (mongoose.models.User as UserModel) ||
-  mongoose.model<IUser1, UserModel>('User', userSchema1);
