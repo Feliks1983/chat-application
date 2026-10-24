@@ -56,9 +56,7 @@ app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
 io.use(socketAuthMiddleware);
 io.on('connection', async (socket) => {
   const userId = socket.data.userId;
-   socket.on('send-message', msg => {
-     io.emit('new-message', msg);
-   });
+
   try {
     registerChatHandlers(io, socket);
     const user = await User.findByIdAndUpdate(

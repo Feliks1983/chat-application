@@ -9,7 +9,7 @@ router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const userId = new mongoose.Types.ObjectId(req.userId);
+    const userId = new mongoose.Types.ObjectId(req.user!.userId);
     const rooms = await Room.find({ $or: [{ isPublic: true }, { members: userId }] })
       .sort({ lastActivity: -1 })
       .populate('members', 'username isOnline lastSeen')
@@ -38,7 +38,7 @@ router.post('/', async (req: AuthRequest, res, next) => {
       res.status(400).json({ error: 'Description must be at most 500 characters' });
       return;
     }
-    const id = new mongoose.Types.ObjectId(req.userId);
+    const id = new mongoose.Types.ObjectId(req.user!.userId);
     const room = await Room.create({
       name,
       description,
@@ -66,7 +66,7 @@ router.get('/:roomId/messages', async (req: AuthRequest, res, next) => {
       res.status(404).json({ error: 'Room not found' });
       return;
     }
-    const isMember = room.members.some(id => id.toString() === req.userId);
+    const isMember = room.members.some(id => id.toString() === req.user!.userId);
     if (!room.isPublic && !isMember) {
       res.status(403).json({ error: 'You do not have access to this room' });
       return;

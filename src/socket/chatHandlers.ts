@@ -30,7 +30,6 @@ export function registerChatHandlers(io: Server, socket: ChatSocket): void {
         return;
       }
 
-      socket.join(roomId);
       const result = await Message.create({
         room: room._id,
         sender: userId,
@@ -46,7 +45,9 @@ export function registerChatHandlers(io: Server, socket: ChatSocket): void {
       room.lastActivity = new Date();
       if (room.isPublic && !member) room.members.push(new mongoose.Types.ObjectId(userId));
       await room.save();
-
+     const sockets = io.sockets.adapter.rooms.get(roomId);
+   
+      io.emit('new-message', message);
     } catch(error) {
       console.error('send-message failed:', error);
       socket.emit('error', { message: 'Could not send message' });
@@ -69,7 +70,6 @@ export function registerChatHandlers(io: Server, socket: ChatSocket): void {
 
   socket.on('join-room', async (payload: { roomId?: string }) => {
     try {
-      console.log('[join-room] payload:', payload);
       const roomId = payload?.roomId;
       if (!roomId || !mongoose.isValidObjectId(roomId)) {
         socket.emit('error', { message: 'Invalid room id' });
